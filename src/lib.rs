@@ -37,7 +37,25 @@ impl Std15 {
     }
     
     pub fn putc(&mut self, c:char) -> () {
-        self.set_char(self.cursor_x,self.cursor_y,c)
+        self.set_char(self.cursor_x,self.cursor_y,c);
+        if self.cursor_x < self.buff_w-1 {
+          self.cursor_x +=1;
+        } else {
+          if self.cursor_y < self.buff_h-1 {
+            self.cursor_x = 0;
+            self.cursor_y +=1;
+          }
+        }
+    }
+
+    pub fn putstr(&mut self, s:&str) -> () {
+        for c in s.chars() {
+          self.putc(c)
+        }
+    }
+
+    pub fn putnum(&mut self, n:i32) -> () {
+        self.putstr(&n.to_string())
     }
     
     pub fn scr(& self, x:i32, y:i32) -> char {

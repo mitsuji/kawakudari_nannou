@@ -9,7 +9,7 @@ fn main() {
 
 struct Model {
     std15: Std15,
-    tick: i32,
+    frame: u32,
     x: i32,
     running: bool,
 }
@@ -20,7 +20,7 @@ fn model(app: & App) -> Model {
     app.new_window().size(512,384).event(event).view(view).build().unwrap();
     Model {
         std15 : Std15::new(512,384,32,24),
-        tick : 0,
+        frame : 0,
         x: 15,
         running: true,
     }
@@ -28,7 +28,7 @@ fn model(app: & App) -> Model {
 
 fn update(_app: &App, model: &mut Model, _update: Update) {
     if model.running {
-        if model.tick % 3 == 0 {
+        if model.frame % 3 == 0 {
             let std15 = &mut model.std15;
             std15.locate(model.x,5);
             std15.putc('0');
@@ -36,11 +36,14 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
             std15.putc('*');
             std15.scroll();
 	    if std15.scr(model.x,5) != '\0' {
+	      std15.locate(0,23);
+	      std15.putstr("Game Over...");
+	      std15.putnum(model.frame as i32);
 	      model.running = false;
 	    }
         }
     }
-    model.tick +=1;
+    model.frame +=1;
 }
 
 fn event(_app: &App, model: &mut Model, event: WindowEvent) {
