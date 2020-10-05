@@ -1,6 +1,7 @@
 use nannou::prelude::*;
 use std::time::Duration;
 use nannou::rand::random_range;
+use kawakudari_nannou::Direction;
 use kawakudari_nannou::Std15;
 
 fn main() {
@@ -34,13 +35,13 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
             std15.putc('0');
             std15.locate(random_range::<i32>(0,32),23);
             std15.putc('*');
-            std15.scroll();
-	    if std15.scr(model.x,5) != '\0' {
-	      std15.locate(0,23);
-	      std15.putstr("Game Over...");
-	      std15.putnum(model.frame as i32);
-	      model.running = false;
-	    }
+            std15.scroll(Direction::Up);
+            if std15.scr(model.x,5) != '\0' {
+              std15.locate(0,23);
+              std15.putstr("Game Over...");
+              std15.putnum(model.frame as i32);
+              model.running = false;
+            }
         }
     }
     model.frame +=1;
