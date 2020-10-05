@@ -110,6 +110,15 @@ impl Std15 {
       }
     }
 
+    pub fn pset(&mut self, x:i32, y:i32) -> () {
+        let cx = x / 2;
+        let cy = y / 2;
+        let c = self.scr(cx,cy) as u8;
+        let b = 2i64.pow((((y%2) << 1) + (x%2)) as u32);
+        let d = (if (c & 0xf0) == 0x80 { c } else { 0x80 }) | ( b as u8);
+        self.set_char(cx, cy, d as char)
+    }
+
     pub fn set_char(&mut self, x:i32, y:i32, c:char) -> () {
         self.buff[(y * self.buff_w + x) as usize] = c
     }
@@ -153,6 +162,12 @@ impl Std15 {
 }
 
 
+/**
+ *
+ *  CC BY IchigoJam & mitsuji.org
+ *  https://mitsuji.github.io/ichigojam-font.json/
+ *
+ */
 static ICHIGOJAM_FONT: [u64; 0x100] = [
     0x0000000000000000,
     0xffffffffffffffff,
