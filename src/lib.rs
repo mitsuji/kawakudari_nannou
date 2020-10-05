@@ -1,28 +1,31 @@
 use nannou::prelude::*;
 
-    
-const CHAR_SX:i32 = 8;
-const CHAR_SY:i32 = 8;
+const CHAR_W:i32 = 8;
+const CHAR_H:i32 = 8;
 
 pub struct Std15 {
-    pub screen_sy: i32,
-    pub cb_sx: i32,
-    pub cb_sy: i32,
-    pub cb_unit: f32,
-    pub char_buff: Vec<char>,
+    pub screen_w: i32,
+    pub screen_h: i32,
+    pub buff_w: i32,
+    pub buff_h: i32,
+    pub dot_w: f32,
+    pub dot_h: f32,
+    pub buff: Vec<char>,
     pub cursor_x: i32,
     pub cursor_y: i32,
 }
 
 
 impl Std15 {
-    pub fn new(screen_sx:i32, screen_sy:i32, cb_sx:i32, cb_sy:i32) -> Self {
+    pub fn new(screen_w:i32, screen_h:i32, buff_w:i32, buff_h:i32) -> Self {
         Std15 {
-            screen_sy: screen_sy,
-            cb_sx: cb_sx,
-            cb_sy: cb_sy,
-            cb_unit: screen_sx as f32 / cb_sx as f32 / 8.0,
-	    char_buff: vec!['\0'; (cb_sx * cb_sy) as usize],
+            screen_w: screen_w,
+            screen_h: screen_h,
+            buff_w: buff_w,
+            buff_h: buff_h,
+            dot_w: screen_w as f32 / buff_w as f32 / CHAR_W as f32,
+            dot_h: screen_h as f32 / buff_h as f32 / CHAR_H as f32,
+	    buff: vec!['\0'; (buff_w * buff_h) as usize],
             cursor_x: 0,
             cursor_y: 0,
         }
@@ -33,71 +36,78 @@ impl Std15 {
         self.cursor_y = y;
     }
     
-    pub fn putc_loc(&mut self, x:i32, y:i32, c:char) -> () {
-    	self.char_buff[(y * self.cb_sx + x) as usize] = c
-    }
-    
     pub fn putc(&mut self, c:char) -> () {
-    	self.putc_loc(self.cursor_x,self.cursor_y,c)
+        self.set_char(self.cursor_x,self.cursor_y,c)
     }
     
     pub fn scr(& self, x:i32, y:i32) -> char {
-    	self.char_buff[(y * self.cb_sx + x) as usize]
+        self.buff[(y * self.buff_w + x) as usize]
     }
 
     pub fn cls(&mut self) -> () {
-    	for y in 0..self.cb_sy {
-	  for x in 0..self.cb_sx {
-    	    self.char_buff[(y * self.cb_sx + x) as usize] = '\0'
-	  }
-	}
+        for y in 0..self.buff_h {
+          for x in 0..self.buff_w {
+            self.set_char(x,y,'\0')
+          }
+        }
     }
 
     pub fn scroll(&mut self) -> () {
-    	for y in 0..self.cb_sy {
-	  for x in 0..self.cb_sx {
-	    if y == self.cb_sy -1 {
-    	      self.char_buff[(y * self.cb_sx + x) as usize] = '\0'
-	    } else {
-    	      self.char_buff[(y * self.cb_sx + x) as usize] =
-	      	      self.char_buff[((y+1) * self.cb_sx + x) as usize]
-	    }
-	  }
-	}
+      for y in 0..self.buff_h {
+        for x in 0..self.buff_w {
+          if y == self.buff_h -1 {
+            self.set_char(x,y,'\0')
+          } else {
+            self.set_char(x,y,self.scr(x,y+1))
+          }
+        }
+      }
     }
 
-    pub fn mapchar(&self, app:&App, draw:&Draw, cx:i32, cy:i32, c:char) -> () {
-        let win = app.window_rect().pad(10.0);
-        let glyph = FONT[c as usize];
-    	for y in 0..CHAR_SY {
-	  let line = (glyph >> ((CHAR_SY-y-1)*CHAR_SX)) & 0xff;
-	  for x in 0..CHAR_SX {
-	    if ((line >> (CHAR_SX-x-1)) & 0x1) == 0x1 {
-              let x0 = ((cx * CHAR_SX + x) as f32) * self.cb_unit;
-              let y0 = (self.screen_sy as f32) - ((cy * CHAR_SY + y) as f32) * self.cb_unit;
-	      let r = Rect::from_w_h(self.cb_unit, self.cb_unit).bottom_left_of(win).shift_x(x0).shift_y(y0);
-	      draw.rect()
-		.wh(r.wh())
-		.xy(r.xy())
-		.color(WHITE);
-	    }
-	  }
-	}
+    pub fn set_char(&mut self, x:i32, y:i32, c:char) -> () {
+        self.buff[(y * self.buff_w + x) as usize] = c
     }
 
-    pub fn papplet_draw(&self, app:&App, draw:&Draw) -> () {
-	draw.background().color(BLACK);
-    	for y in 0..self.cb_sy {
-	  for x in 0..self.cb_sx {
-             self.mapchar( app, draw, x, y, self.char_buff[(y * self.cb_sx + x) as usize]);
+    pub fn draw_rect(&self, app:&App, draw:&Draw, x:f32, y:f32, w:f32, h:f32, color:Srgb<u8>) -> () {
+        let win = app.window_rect();
+	let x0 = x;
+	let y0 = self.screen_h as f32 - y;
+        let r = Rect::from_w_h(w,h).bottom_left_of(win).shift_x(x0).shift_y(y0);
+        draw.rect()
+          .wh(r.wh())
+          .xy(r.xy())
+          .color(color);
+    }
+
+    pub fn draw_char(&self, app:&App, draw:&Draw, cx:i32, cy:i32, c:char) -> () {
+        let glyph = ICHIGOJAM_FONT[c as usize];
+        for y in 0..CHAR_H {
+          let line = (glyph >> ((CHAR_H-y-1)*CHAR_W)) & 0xff;
+          for x in 0..CHAR_W {
+            if ((line >> (CHAR_W-x-1)) & 0x1) == 0x1 {
+              let x0 = ((cx * CHAR_W + x) as f32) * self.dot_w;
+              let y0 = ((cy * CHAR_H + y +1) as f32) * self.dot_h; // [MEMO] why need +1 ?
+              self.draw_rect(app,draw,x0,y0,self.dot_w,self.dot_h,WHITE);
+            }
+          }
+        }
+    }
+
+    pub fn draw_screen(&self, app:&App, frame:&Frame) -> () {
+        let draw:Draw = app.draw();
+        draw.background().color(BLACK);
+        for y in 0..self.buff_h {
+	  for x in 0..self.buff_w {
+             self.draw_char( app, &draw, x, y, self.scr(x,y) );
 	  }
 	}
+        draw.to_frame(app, frame).unwrap();
     }
 
 }
 
 
-static FONT: [u64; 0x100] = [
+static ICHIGOJAM_FONT: [u64; 0x100] = [
     0x0000000000000000,
     0xffffffffffffffff,
     0xffaaff55ffaaff55,

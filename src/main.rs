@@ -17,7 +17,7 @@ struct Model {
 fn model(app: & App) -> Model {
     let interval = Duration::from_millis(16);
     app.set_loop_mode(nannou::app::LoopMode::Rate{update_interval:interval});
-    app.new_window().size(512+10+10,384+10+10).event(event).view(view).build().unwrap();
+    app.new_window().size(512,384).event(event).view(view).build().unwrap();
     Model {
         std15 : Std15::new(512,384,32,24),
         tick : 0,
@@ -52,9 +52,7 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
 }
 
 fn view(app: &App, _model: &Model, frame: Frame) {
-    let draw:Draw = app.draw();
-    _model.std15.papplet_draw(app,&draw);
-    draw.to_frame(app, &frame).unwrap();
+    _model.std15.draw_screen(app,&frame);
 }
 
 
