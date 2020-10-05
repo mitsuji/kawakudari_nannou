@@ -3,6 +3,13 @@ use nannou::prelude::*;
 const CHAR_W:i32 = 8;
 const CHAR_H:i32 = 8;
 
+pub enum Direction {
+    Up,
+    Right,
+    Down,
+    Left,
+}
+
 pub struct Std15 {
     pub screen_w: i32,
     pub screen_h: i32,
@@ -70,13 +77,34 @@ impl Std15 {
         }
     }
 
-    pub fn scroll(&mut self) -> () {
+    pub fn scroll(&mut self, dir:Direction) -> () {
       for y in 0..self.buff_h {
         for x in 0..self.buff_w {
-          if y == self.buff_h -1 {
-            self.set_char(x,y,'\0')
-          } else {
-            self.set_char(x,y,self.scr(x,y+1))
+	  match dir {
+              Direction::Up =>
+                if y == self.buff_h -1 {
+                  self.set_char(x,y,'\0')
+                } else {
+                  self.set_char(x,y,self.scr(x,y+1))
+                }
+              Direction::Right =>
+                if x == self.buff_w -1 {
+                  self.set_char(self.buff_w-x-1,y,'\0')
+                } else {
+                  self.set_char(self.buff_w-x-1,y,self.scr((self.buff_w-x-1)-1,y))
+                }
+              Direction::Down =>
+                if y == self.buff_h -1 {
+                  self.set_char(x,self.buff_h-y-1,'\0')
+                } else {
+                  self.set_char(x,self.buff_h-y-1,self.scr(x,(self.buff_h-y-1)-1))
+                }
+              Direction::Left =>
+                if x == self.buff_w -1 {
+                  self.set_char(x,y,'\0')
+                } else {
+                  self.set_char(x,y,self.scr(x+1,y))
+                }
           }
         }
       }
