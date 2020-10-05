@@ -126,7 +126,7 @@ impl Std15 {
     pub fn draw_rect(&self, app:&App, draw:&Draw, x:f32, y:f32, w:f32, h:f32, color:Srgb<u8>) -> () {
         let win = app.window_rect();
 	let x0 = x;
-	let y0 = self.screen_h as f32 - y;
+	let y0 = self.screen_h as f32 -y -h;
         let r = Rect::from_w_h(w,h).bottom_left_of(win).shift_x(x0).shift_y(y0);
         draw.rect()
           .wh(r.wh())
@@ -141,7 +141,7 @@ impl Std15 {
           for x in 0..CHAR_W {
             if ((line >> (CHAR_W-x-1)) & 0x1) == 0x1 {
               let x0 = ((cx * CHAR_W + x) as f32) * self.dot_w;
-              let y0 = ((cy * CHAR_H + y +1) as f32) * self.dot_h; // [MEMO] why need +1 ?
+              let y0 = ((cy * CHAR_H + y) as f32) * self.dot_h;
               self.draw_rect(app,draw,x0,y0,self.dot_w,self.dot_h,WHITE);
             }
           }
